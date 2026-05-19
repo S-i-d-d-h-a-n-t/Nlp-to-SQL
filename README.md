@@ -1,6 +1,6 @@
 # Automated B2B Client Reporting & Query Engine
 
-A production-grade natural language query engine that bridges the gap between non-technical business users and a relational database. Ask a business question in plain English — get back validated SQL, raw data, and a clean business summary. Powered by **Gemini 2.5 Flash** and built with **FastAPI**.
+A production-grade natural language query engine that bridges the gap between non-technical business users and a relational database. Ask a business question in plain English, get back validated SQL, raw data, and a clean business summary. Powered by **Gemini 2.5 Flash** and built with **FastAPI**.
 
 ---
 
