@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>B2B Query Engine</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ═══════════════════════════════════════════
+       SIDEBAR
+  ════════════════════════════════════════════ -->
+  <aside class="sidebar">
+
+    <!-- Logo -->
+    <div class="sidebar-logo">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">
+        <strong>B2B Query Engine</strong>
+        <span>Powered by Gemini 2.5 Flash</span>
+      </div>
+    </div>
+
+    <!-- Schema Reference -->
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Schema Reference</div>
+      <div class="schema-explorer" id="schema-explorer">
+
+        <div class="schema-table-block">
+          <button class="schema-table-header" aria-expanded="true">
+            <span class="schema-table-icon">⊞</span>
+            <span class="schema-table-name">clients</span>
+            <span class="schema-collapse-icon">−</span>
+          </button>
+          <ul class="schema-column-list">
+            <li><span class="col-name">id</span><span class="col-type">[integer]</span><span class="col-key pk">PK</span></li>
+            <li><span class="col-name">company_name</span><span class="col-type">[varchar(120)]</span></li>
+            <li><span class="col-name">tier</span><span class="col-type">[text]</span></li>
+            <li><span class="col-name">industry</span><span class="col-type">[text]</span></li>
+            <li><span class="col-name">country</span><span class="col-type">[text]</span></li>
+          </ul>
+        </div>
+
+        <div class="schema-table-block">
+          <button class="schema-table-header" aria-expanded="true">
+            <span class="schema-table-icon">⊞</span>
+            <span class="schema-table-name">subscriptions</span>
+            <span class="schema-collapse-icon">−</span>
+          </button>
+          <ul class="schema-column-list">
+            <li><span class="col-name">id</span><span class="col-type">[integer]</span><span class="col-key pk">PK</span></li>
+            <li><span class="col-name">client_id</span><span class="col-type">[integer]</span><span class="col-key fk">FK</span></li>
+            <li><span class="col-name">plan_name</span><span class="col-type">[text]</span></li>
+            <li><span class="col-name">monthly_price</span><span class="col-type">[real]</span></li>
+            <li><span class="col-name">status</span><span class="col-type">[text]</span></li>
+          </ul>
+        </div>
+
+        <div class="schema-table-block">
+          <button class="schema-table-header" aria-expanded="true">
+            <span class="schema-table-icon">⊞</span>
+            <span class="schema-table-name">usage_logs</span>
+            <span class="schema-collapse-icon">−</span>
+          </button>
+          <ul class="schema-column-list">
+            <li><span class="col-name">id</span><span class="col-type">[integer]</span><span class="col-key pk">PK</span></li>
+            <li><span class="col-name">client_id</span><span class="col-type">[integer]</span><span class="col-key fk">FK</span></li>
+            <li><span class="col-name">api_calls_made</span><span class="col-type">[integer]</span></li>
+            <li><span class="col-name">storage_used_gb</span><span class="col-type">[real]</span></li>
+            <li><span class="col-name">log_date</span><span class="col-type">[date]</span></li>
+          </ul>
+        </div>
+
+        <div class="schema-table-block">
+          <button class="schema-table-header" aria-expanded="true">
+            <span class="schema-table-icon">⊞</span>
+            <span class="schema-table-name">invoices</span>
+            <span class="schema-collapse-icon">−</span>
+          </button>
+          <ul class="schema-column-list">
+            <li><span class="col-name">id</span><span class="col-type">[integer]</span><span class="col-key pk">PK</span></li>
+            <li><span class="col-name">client_id</span><span class="col-type">[integer]</span><span class="col-key fk">FK</span></li>
+            <li><span class="col-name">amount_due</span><span class="col-type">[real]</span></li>
+            <li><span class="col-name">payment_status</span><span class="col-type">[text]</span></li>
+            <li><span class="col-name">due_date</span><span class="col-type">[date]</span></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Footer / API Status -->
+    <div class="sidebar-footer">
+      <div class="status-dot" id="status-dot"></div>
+      <span id="status-text">Checking API…</span>
+    </div>
+
+  </aside>
+
+  <!-- ═══════════════════════════════════════════
+       TOP BAR
+  ════════════════════════════════════════════ -->
+  <header class="topbar">
+    <div>
+      <div class="topbar-title">Automated B2B Client Reporting</div>
+      <div class="topbar-sub">Ask a business question — get SQL, data, and a plain-English summary</div>
+    </div>
+    <div class="model-badge">
+      <div class="dot"></div>
+      gemini-2.5-flash
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN CANVAS
+  ════════════════════════════════════════════ -->
+  <main class="main-canvas">
+
+    <!-- Query Input Card -->
+    <div class="query-card">
+      <label for="prompt-input">Your Business Question</label>
+
+      <div class="input-row">
+        <textarea
+          id="prompt-input"
+          placeholder="e.g. Which Enterprise clients have unpaid invoices this month?"
+          rows="2"
+          autocomplete="off"
+          spellcheck="true"
+        ></textarea>
+        <button class="btn-run" id="run-btn">
+          <span>▶</span> Run Query
+        </button>
+      </div>
+
+      <!-- Suggested Questions Dropdown -->
+      <div class="suggestions-wrap">
+        <button class="btn-suggestions" id="suggestions-toggle" aria-expanded="false" aria-controls="suggestions-panel">
+          <span class="suggestions-icon">💡</span>
+          Suggested Questions
+          <span class="suggestions-chevron" id="suggestions-chevron">▾</span>
+        </button>
+        <div class="suggestions-panel" id="suggestions-panel" role="listbox" aria-label="Suggested questions">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+
+      <div class="loading-bar" id="loading-bar"></div>
+
+      <!-- Phase progress pills -->
+      <div class="loading-steps" id="loading-steps">
+        <div class="step-pill" id="step-sql">
+          <span class="step-icon">🧠</span> SQL Generation
+        </div>
+        <div class="step-pill" id="step-guard">
+          <span class="step-icon">🛡️</span> Guardrail Check
+        </div>
+        <div class="step-pill" id="step-exec">
+          <span class="step-icon">🗄️</span> DB Execution
+        </div>
+        <div class="step-pill" id="step-summary">
+          <span class="step-icon">✍️</span> Summarisation
+        </div>
+      </div>
+
+      <!-- Error Banner -->
+      <div class="error-banner" id="error-banner">
+        <span class="err-icon">⚠️</span>
+        <span id="error-msg"></span>
+      </div>
+    </div>
+
+    <!-- Results Area -->
+    <div class="results-area" id="results-area">
+
+      <!-- Business Summary -->
+      <div class="summary-card" id="summary-card">
+        <div class="card-header">
+          <div class="card-icon">📋</div>
+          <div>
+            <div class="card-title">Business Summary</div>
+            <div class="card-question" id="summary-question"></div>
+          </div>
+        </div>
+        <div class="summary-text" id="summary-text"></div>
+      </div>
+
+      <!-- Generated SQL -->
+      <div class="sql-card" id="sql-card">
+        <div class="sql-card-header">
+          <div class="sql-label">
+            🗃️ Generated SQL &nbsp;·&nbsp; <span>SQLite · Read-only</span>
+          </div>
+          <button class="btn-copy" id="copy-btn">⎘ Copy</button>
+        </div>
+        <div class="sql-body">
+          <pre id="sql-pre"></pre>
+        </div>
+      </div>
+
+      <!-- Raw Results Table -->
+      <div class="table-card" id="table-card">
+        <div class="table-card-header">
+          <div class="tbl-label">
+            📊 Raw Results
+            <span class="row-count" id="row-count">0 rows</span>
+          </div>
+        </div>
+        <div class="table-wrapper" id="table-wrapper"></div>
+      </div>
+
+    </div><!-- /results-area -->
+
+  </main><!-- /main-canvas -->
+
+</div><!-- /app-shell -->
+
+<script src="/static/app.js"></script>
+</body>
+</html>
